@@ -1,3 +1,4 @@
+# are there any better viz? or having stacked bar chart only throughout okay, because it makes sense? 
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -6,17 +7,35 @@ import seaborn as sns
 import plotly.express as px
 import plotly.graph_objects as go
 import re
-
 st.set_page_config(page_title="9-Pointer Habits Dashboard", layout="wide")
 
 st.title("Habits of 9-Pointers Survey Analysis")
+
+# Embedded header tab with clickable link
+st.markdown(
+    """
+    <div style="background-color:#f0f2f6; padding:10px; border-radius:5px; margin-bottom:20px;">
+        👉 Want to participate?  
+        <a href="https://forms.gle/LAEiF3QdYnnq9cUy9" target="_blank" style="color:#873260; font-weight:bold; text-decoration:none;">
+            Fill the survey here
+        </a>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
 st.markdown("""
-**Disclaimer:**  
-- This data is collected via survey and is **not an implication of anything**.  
-- Results represent only participants' responses.  
+**Disclaimer:**
+
+This data was collected through a survey reflecting participants’ habits and opinions only.
+
+The results do not imply causation or suggest that any particular habit guarantees academic success.
+
+No assumptions or judgments should be made about individuals based on these responses.
+
+Interpret the findings with an open mind and within the context of the surveyed group.
 """)
 
-st.markdown("👉 Want to participate? [Fill the survey here]https://forms.gle/LAEiF3QdYnnq9cUy9")
 
 def df_cleaning(df):
     df.rename(columns={
@@ -32,6 +51,7 @@ def df_cleaning(df):
       '8. Active member of Clubs/Chapters/Teams/Anything that involved Night-slips or ODs( events etc)?':"clubs_chapters",
       '9. Number of events participated in like Hackathons/Ideathons / Events related to my degree or career?':"competitions",
       "10. What's the perfect seat for your?":"seating_arrangement",
+      "10. What's the perfect seat for you?":"seating_arrangement",
       '11. Bond with teachers.':"bond_teachers",
       '12. Study sources?':"study_material",
       '13. Any disciplinary action?':"disciplinary_action",
@@ -57,6 +77,7 @@ def df_cleaning(df):
     df[num]= df[num].fillna(-1)
     df['cgpa_bool'] = df['cgpa'].apply(lambda x: "9-pointer" if x>=9 else "Non-9-pointer")
     df['attendance']=df['attendance'].apply(lambda x: f"{x*10}%")
+    df = df.loc[(df['competitions']>0) & (df['cgpa']<=10)].copy()
 
     class_notes_dict = {
     "One notebook for all subjects. \"If I feel like it, I'll write\" [medium maintenance]": 'medium maintenance',
@@ -84,7 +105,48 @@ def df_cleaning(df):
     -1: 'Not Answered'
 }
     df['da'] = df['da'].replace(da_dict)
+    
+    ffcs_dict = {"I check profs, slots and have backup timetables. [Pro ffcs-er]":"Pro ffcs-er",
+       "I choose slots on the day of FFCS and hope they don't clash [Almost no prep]":"Almost no prep",
+       "I have a timetable and tested for no clash [Good Prep]":"Good Prep",
+       "I know good teachers and slots, but I don't check using tools like ffcsonthego [Medium prep]":"Medium prep"}
+    df['ffcs'] = df['ffcs'].replace(ffcs_dict)
 
+    seating_arrangement_dict = {
+    'First/second bench': 'First/second bench',
+    "If there is something beyond last bench, I'd choose that.": 'last bencher',
+    'Somewhere in the middle': 'Somewhere in the middle',
+    'No preference.': 'No preference.',
+    'Not Answered': 'Not Answered'
+}
+    df['seating_arrangement'] = df['seating_arrangement'].replace(seating_arrangement_dict)
+
+    study_location_dict = {
+    'Room': 'Room',
+    'Library': 'Library',
+    "Friend's room [or library with friends]": "Friend's room (or library with friends)",
+    'Not Answered': 'Not Answered'
+}
+    df['study_location'] = df['study_location'].replace(study_location_dict)
+
+    clubs_chapters_dict = {
+    'Yes, I just want OD': 'Only for OD',
+    'Yes, but I compensate for my academics somehow.': 'Yes, compensate academics',
+    'Yes, I want to gain experience.': 'Yes, for experience',
+    'No': 'No',
+    'Not Answered': 'Not Answered'
+}
+    df['clubs_chapters'] = df['clubs_chapters'].replace(clubs_chapters_dict)
+
+    categories_dict = {
+    '8+ hours | Exercise regularly': 'Very Healthy',
+    '6-8 hours | Exercise a few times a week': 'Healthy',
+    '4-6 hours | Occasionally exercise': 'Moderately Healthy',
+    '8+ hours | Rarely exercise': 'Unhealthy (Over-sleep)',
+    '<4 hours | Rarely exercise': 'Unhealthy (Sleep deprived)',
+    'Not Answered': 'Not Answered'
+}
+    df['lifestyle'] = df['lifestyle'].replace(categories_dict)
 
 
     return df
@@ -114,7 +176,7 @@ def plot_item_vs_cgpa(df, column, barmode="group", normalize=True, sort9=True):
         x=column, y=y_col, color="cgpa_bool",
         text_auto=".1f",
         barmode=barmode,
-        hover_data={"count": True, "percentages":":.1f"},
+        hover_data={"count": True, "percentages":":.1f %"},
         color_discrete_map={
             "9-pointer": "#873260",
             "Non-9-pointer": "#DAA520",
@@ -159,7 +221,7 @@ st.header(f"📊 {selected_section}")
 for col in sections[selected_section]:
     st.subheader(col.replace("_", " ").title())
     
-    if col in ["cgpa", "attendance", "backlogs", "competitions"]:  
+    if col in ["cgpa", "attendance", "backlogs", "competitions", "room_type"]:  
         # Numeric → Boxplot
         fig = px.box(df, x="cgpa_bool", y=col, color="cgpa_bool",
                      color_discrete_map={"9-pointer":"#873260","Non-9-pointer":"#DAA520"})
