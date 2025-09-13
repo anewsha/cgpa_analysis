@@ -1,40 +1,51 @@
-# are there any better viz? or having stacked bar chart only throughout okay, because it makes sense? 
-import streamlit as st
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-import plotly.express as px
-import plotly.graph_objects as go
-import re
-st.set_page_config(page_title="9-Pointer Habits Dashboard", layout="wide")
+# # are there any better viz? or having stacked bar chart only throughout okay, because it makes sense? 
+# import streamlit as st
+# import pandas as pd
+# import numpy as np
+# import matplotlib.pyplot as plt
+# import seaborn as sns
+# import plotly.express as px
+# import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+# import re
+# st.set_page_config(page_title="9-Pointer Habits Dashboard", layout="wide")
 
-st.title("Habits of 9-Pointers Survey Analysis")
+# st.title("Habits of 9-Pointers Survey Analysis")
 
-# Embedded header tab with clickable link
-st.markdown(
-    """
-    <div style="background-color:#f0f2f6; padding:10px; border-radius:5px; margin-bottom:20px;">
-        👉 Want to participate?  
-        <a href="https://forms.gle/LAEiF3QdYnnq9cUy9" target="_blank" style="color:#873260; font-weight:bold; text-decoration:none;">
-            Fill the survey here
-        </a>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+# # Embedded header tab with clickable link
+# st.markdown(
+#     """
+#     <div style="background-color:#f0f2f6; padding:10px; border-radius:5px; margin-bottom:20px;">
+#         👉 Want to participate?  
+#         <a href="https://forms.gle/LAEiF3QdYnnq9cUy9" target="_blank" style="color:#873260; font-weight:bold;;">
+#             Fill the survey here
+#         </a>
+#     </div>
+#     """,
+#     unsafe_allow_html=True
+# )
+# with st.expander("Disclaimer"):
+#     st.markdown("""
+# - This data was collected through a survey reflecting participants’ habits and opinions only.
 
-st.markdown("""
-**Disclaimer:**
+# - The results do not imply causation or suggest that any particular habit guarantees academic success.
 
-This data was collected through a survey reflecting participants’ habits and opinions only.
+# - No assumptions or judgments should be made about individuals based on these responses.
 
-The results do not imply causation or suggest that any particular habit guarantees academic success.
+# - Interpret the findings with an open mind and within the context of the surveyed group.
+# """)
 
-No assumptions or judgments should be made about individuals based on these responses.
+# with st.expander("Insights of of Data"):
+#     st.markdown("""
+#                 **Based on data till 13th September, 25**: Data might have updates. 
+# -   **Major differences**
+                
+#                 - DA: 9 pointers do their DA much before the deadline and non 9 keep it for last minute. 
+#                 - The lower attendance among 9-pointers suggests that they prioritize self-directed learning and efficient use of their time over simply being present in class. 
+#                 - non-9-pointers are more inclined to use a single notebook for all subjects(84%), 9 pointers make 
 
-Interpret the findings with an open mind and within the context of the surveyed group.
-""")
+
+# """)
 
 
 def df_cleaning(df):
@@ -151,17 +162,122 @@ def df_cleaning(df):
 
     return df
 
-def plot_item_vs_cgpa(df, column, barmode="group", normalize=True, sort9=True):
-    # Group and count
+# def plot_item_vs_cgpa(df, column, barmode="group", normalize=True, sort9=True):
+#     # Group and count
+#     df_temp = df.groupby(column)["cgpa_bool"].value_counts().reset_index(name="count")
+
+#     # Percentages within each category
+#     df_temp["percentages"] = df_temp.groupby(column)["count"].transform(lambda x: x/x.sum()*100)
+
+#     # Decide which y to plot
+#     y_col = "percentages" if normalize else "count"
+
+#     # Sorting by % of 9-pointers
+#     if sort9 and "9-pointer" in df["cgpa_bool"].unique():
+#         order = (
+#             df_temp[df_temp["cgpa_bool"]=="9-pointer"]
+#             .sort_values("percentages", ascending=False)[column]
+#         )
+#     else:
+#         order = df_temp[column].unique()
+
+#     # Plot
+#     fig = px.bar(
+#         df_temp,
+#         x=column, y=y_col, color="cgpa_bool",
+#         text_auto=".1f",
+#         barmode=barmode,
+#         hover_data={"count": True, "percentages":":.1f %"},
+#         color_discrete_map={
+#             "9-pointer": "#873260",
+#             "Non-9-pointer": "#DAA520",
+#         },
+#         category_orders={column: order, "cgpa_bool": ["9-pointer", "Non-9-pointer"]}
+#     )
+
+#     fig.update_layout(
+#         legend_title_text="CGPA Category",
+#         xaxis_title=column.replace("_", " ").title(),
+#         yaxis_title="Percentage" if normalize else "Count"
+#     )
+
+#     return fig
+
+
+# @st.cache_data
+# def load_data():
+    
+#     df = pd.read_excel("Data.xlsx")
+#     df = df_cleaning(df)
+#     return df
+
+# df = load_data()
+
+
+# sections = {
+#     "Intro of Data": ["Branch", "year", "spl"],
+#     "Academics": ["da", "backlogs", "exam_prep", "study_material"],
+#     "Class Habits": ["class_notes", "attendance", "ffcs", "seating_arrangement", "study_location"],
+#     "Extra-curricular": ["clubs_chapters", "competitions"],
+#     "Social": ["bond_teachers", "disciplinary_action", "social_life", "lifestyle", "room_type"],
+# }
+
+
+
+# st.sidebar.header("📂 Choose Section")
+# selected_section = st.sidebar.radio("Select a category:", list(sections.keys()))
+
+# st.header(f"📊 {selected_section}")
+
+# for col in sections[selected_section]:
+#     st.subheader(col.replace("_", " ").title())
+    
+#     if col in ["cgpa", "attendance", "backlogs", "competitions", "room_type"]:  
+#         # Numeric → Boxplot
+#         fig = px.box(df, x="cgpa_bool", y=col, color="cgpa_bool",
+#                      color_discrete_map={"9-pointer":"#873260","Non-9-pointer":"#DAA520"})
+#     else:
+#         # Categorical → Stacked bar
+#         fig = plot_item_vs_cgpa(df, col, barmode="relative", normalize=True)
+    
+#     st.plotly_chart(fig, use_container_width=True)
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+from plotly.subplots import make_subplots
+import re
+
+st.set_page_config(page_title="9-Pointer Habits Dashboard", layout="wide")
+
+st.title("Habits of 9-Pointers Survey Analysis")
+
+# ---------- Disclaimer ----------
+with st.expander("Disclaimer"):
+    st.markdown("""
+    - This data was collected through a survey reflecting participants’ habits and opinions only.
+    - The results do not imply causation or suggest that any particular habit guarantees academic success.
+    - No assumptions or judgments should be made about individuals based on these responses.
+    - Interpret the findings with an open mind and within the context of the surveyed group.
+    """)
+st.markdown(
+    """
+    <div style="background-color:#f0f2f6; padding:10px; border-radius:5px; margin-bottom:20px;">
+        👉 Want to participate?  
+        <a href="https://forms.gle/LAEiF3QdYnnq9cUy9" target="_blank" style="color:#873260; font-weight:bold;;">
+            Fill the survey here
+        </a>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+
+# ---------- Reusable plotting functions ----------
+def plot_item_vs_cgpa(df, column, barmode="relative", normalize=True, sort9=True):
     df_temp = df.groupby(column)["cgpa_bool"].value_counts().reset_index(name="count")
-
-    # Percentages within each category
     df_temp["percentages"] = df_temp.groupby(column)["count"].transform(lambda x: x/x.sum()*100)
-
-    # Decide which y to plot
     y_col = "percentages" if normalize else "count"
 
-    # Sorting by % of 9-pointers
     if sort9 and "9-pointer" in df["cgpa_bool"].unique():
         order = (
             df_temp[df_temp["cgpa_bool"]=="9-pointer"]
@@ -170,39 +286,52 @@ def plot_item_vs_cgpa(df, column, barmode="group", normalize=True, sort9=True):
     else:
         order = df_temp[column].unique()
 
-    # Plot
     fig = px.bar(
         df_temp,
         x=column, y=y_col, color="cgpa_bool",
         text_auto=".1f",
         barmode=barmode,
         hover_data={"count": True, "percentages":":.1f %"},
-        color_discrete_map={
-            "9-pointer": "#873260",
-            "Non-9-pointer": "#DAA520",
-        },
+        color_discrete_map={"9-pointer": "#873260","Non-9-pointer": "#DAA520"},
         category_orders={column: order, "cgpa_bool": ["9-pointer", "Non-9-pointer"]}
     )
-
     fig.update_layout(
         legend_title_text="CGPA Category",
         xaxis_title=column.replace("_", " ").title(),
         yaxis_title="Percentage" if normalize else "Count"
     )
-
     return fig
 
 
+def plot_pie_charts(df, column):
+    figs = {}
+    for cgpa_type, color in zip(["9-pointer", "Non-9-pointer"], ["#873260", "#DAA520"]):
+        df_subset = df[df["cgpa_bool"] == cgpa_type][column].value_counts().reset_index()
+        categories_order = df[col].dropna().unique().tolist()
+        df_subset.columns = [column, "count"]
+        figs[cgpa_type] = px.pie(
+            df_subset, names=column, values="count", category_orders= {column:categories_order},
+            color_discrete_sequence=["#326387", "#B772E1", "#E38B63", "#E3E182","#55F9DE"],
+            title=f"{cgpa_type} Distribution"
+        )
+        figs[cgpa_type].update_layout(
+            legend=dict(traceorder="normal")  # ✅ legend follows category order
+        )
+    return figs
+
+
+# ---------- Load Data ----------
 @st.cache_data
 def load_data():
-    
     df = pd.read_excel("Data.xlsx")
     df = df_cleaning(df)
+    # apply cleaning here
     return df
 
 df = load_data()
 
 
+# ---------- Sections ----------
 sections = {
     "Intro of Data": ["Branch", "year", "spl"],
     "Academics": ["da", "backlogs", "exam_prep", "study_material"],
@@ -211,22 +340,146 @@ sections = {
     "Social": ["bond_teachers", "disciplinary_action", "social_life", "lifestyle", "room_type"],
 }
 
-
-
+# Sidebar section selection
 st.sidebar.header("📂 Choose Section")
 selected_section = st.sidebar.radio("Select a category:", list(sections.keys()))
 
-st.header(f"📊 {selected_section}")
+# Tabs for each column
+st.subheader(f"📊 {selected_section}")
+tab_list = st.tabs([col.replace("_"," ").title() for col in sections[selected_section]])
 
-for col in sections[selected_section]:
-    st.subheader(col.replace("_", " ").title())
-    
-    if col in ["cgpa", "attendance", "backlogs", "competitions", "room_type"]:  
-        # Numeric → Boxplot
-        fig = px.box(df, x="cgpa_bool", y=col, color="cgpa_bool",
-                     color_discrete_map={"9-pointer":"#873260","Non-9-pointer":"#DAA520"})
-    else:
-        # Categorical → Stacked bar
-        fig = plot_item_vs_cgpa(df, col, barmode="relative", normalize=True)
-    
-    st.plotly_chart(fig, use_container_width=True)
+# for tab, col in zip(tab_list, sections[selected_section]):
+#     with tab:
+#         # tab1, tab2 = st.tabs(["Comparative", "Individual"])
+#         # with tab1:
+#         #     if col in ["cgpa", "attendance", "backlogs", "competitions", "room_type"]:  
+#         #         # Numeric → Boxplot
+#         #         fig = px.box(df, x="cgpa_bool", y=col, color="cgpa_bool",
+#         #                     color_discrete_map={"9-pointer":"#873260","Non-9-pointer":"#DAA520"})
+#         #     else:
+#         #         # Categorical → Stacked bar
+#         #         fig = plot_item_vs_cgpa(df, col, barmode="relative", normalize=True)
+
+#         #     fig.update_layout(
+#         #         width=500,   # reduce width
+#         #         height=350,  # reduce height
+#         #         margin=dict(l=20, r=20, t=40, b=20)
+#         #     )
+#         #     st.plotly_chart(fig, use_container_width=True)
+#         # figs = plot_pie_charts(df, col)
+#         # with tab2:
+#         #     col1, col2 = st.columns(2)
+#         #     with col1:
+#         #         st.plotly_chart(figs["9-pointer"], use_container_width=True)
+#         #     with col2:
+#         #         st.plotly_chart(figs["Non-9-pointer"], use_container_width=True)
+#         col1, col2 = st.columns([2,1])
+#         with col1:
+#             st.subheader(col.replace("_", " ").title())
+
+#             # Main stacked/grouped bar
+#             if col in ["cgpa", "attendance", "backlogs", "competitions", "room_type"]:  
+#                     # Numeric → Boxplot
+#                     fig = px.box(df, x="cgpa_bool", y=col, color="cgpa_bool",
+#                                 color_discrete_map={"9-pointer":"#873260","Non-9-pointer":"#DAA520"})
+#             else:
+#                 # Categorical → Stacked bar
+#                 fig = plot_item_vs_cgpa(df, col, barmode="relative", normalize=True)
+#             fig_bar = fig
+#             fig_bar.update_layout(
+#                     width=500,   # reduce width
+#                     height=350,  # reduce height
+#                     margin=dict(l=20, r=20, t=40, b=20)
+#                 )
+#             st.plotly_chart(fig_bar, use_container_width=True)
+#         with col2:
+#         # Pie charts (side by side)
+#             figs = plot_pie_charts(df, col)
+#             sub_fig = make_subplots(rows=2, cols=1, specs=[[{"type": "domain"}],
+#                                            [{"type": "domain"}]])
+
+#             for trace in figs["9-pointer"].data:
+#                 sub_fig.add_trace(trace, row=1, col=1)
+#             for trace in figs["Non-9-pointer"].data:
+#                 sub_fig.add_trace(trace, row=2, col=1)
+
+#             # Shared legend (union of categories)
+#             sub_fig.update_traces(showlegend=True)
+#             sub_fig.update_layout(
+#                 height=700,
+#                 legend=dict(orientation="v"),  # put legend at bottom
+#                 margin=dict(l=20, r=20, t=40, b=40)
+#             )
+
+            # st.plotly_chart(sub_fig, use_container_width=True)
+            # for label, fig_pie in figs.items():
+            #     fig_pie.update_layout(
+            #         height=200,
+            #         margin=dict(l=10, r=10, t=30, b=10),
+            #         legend=dict(
+            #             orientation="h",
+            #             y=-0.2, x=0.5, xanchor="center",
+            #             font=dict(size=9)
+            #         )
+            #     )
+            #     st.plotly_chart(fig_pie, use_container_width=True)
+
+
+for tab, col in zip(tab_list, sections[selected_section]):
+    with tab:
+        st.subheader(col.replace("_", " ").title())
+
+        col1, col2 = st.columns([2,1])  # left: bar/box, right: pies
+
+        # --- Main plot ---
+        with col1:
+            if col in ["cgpa", "attendance", "backlogs", "competitions", "room_type"]:  
+                fig_main = px.box(
+                    df, x="cgpa_bool", y=col, color="cgpa_bool",color_discrete_map={"9-pointer":"#873260","Non-9-pointer":"#DAA520"}
+                )
+                fig_main.update_layout(
+                    height=400,
+                    margin=dict(l=20, r=20, t=60, b=20),
+                    legend=dict(orientation="h", y=1.35, x=0.5, xanchor="center")
+                )
+                st.plotly_chart(fig_main, use_container_width=True)
+
+            else:  # categorical → bar + pies
+                fig_bar = plot_item_vs_cgpa(df, col, barmode="relative", normalize=True)
+                fig_bar.update_layout(
+                    height=400,
+                    margin=dict(l=20, r=20, t=60, b=20),
+                    legend=dict(orientation="h", y=1.35, x=0.5, xanchor="center")
+                )
+                st.plotly_chart(fig_bar, use_container_width=True)
+
+        if col not in ["cgpa", "attendance", "backlogs", "competitions", "room_type", "Branch"]:
+            with col2:
+                figs = plot_pie_charts(df, col)  
+                
+                sub_fig = make_subplots(rows=2, cols=1, specs=[[{"type": "domain"}],
+                                                            [{"type": "domain"}]])
+
+                for trace in figs["9-pointer"].data:
+                    sub_fig.add_trace(trace, row=1, col=1)
+
+                for trace in figs["Non-9-pointer"].data:
+                    sub_fig.add_trace(trace, row=2, col=1)
+
+                sub_fig.update_layout(
+                    annotations=[
+                        dict(text="9-pointer", x=0.5, y=1.1, xref="paper", yref="paper", showarrow=False, font=dict(size=12)),
+                        dict(text="Non-9-pointer", x=0.5, y=.48, xref="paper", yref="paper", showarrow=False, font=dict(size=12))
+                    ],
+                    height=600,
+                    margin=dict(l=20, r=20, t=80, b=20),
+                    legend=dict(
+                        orientation="h", 
+                        y=1.35, x=0.5, xanchor="center",
+                        font=dict(size=10)
+                    )
+                )
+
+
+                st.plotly_chart(sub_fig, use_container_width=True)
+
